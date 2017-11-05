@@ -23,6 +23,7 @@
     #define FPM_SLEEP_MAX_TIME 0xFFFFFFF
     #define BUTTON_PIN_BITMASK 0x200000000 // 2^33 in hex
 
+    boolean firstTimeLightOn = true;    
     int lastMotionSensorValue = -1;
     int counter = 0;
 
@@ -99,6 +100,10 @@
 
     void loop() {
         if(digitalRead(CONFIG_LIGHT_SENSOR_PIN) == 0) {
+            if(firstTimeLightOn) {
+                client.publish(CONFIG_MQTT_TOPIC_LIGHT, String(digitalRead(CONFIG_LIGHT_SENSOR_PIN)).c_str());
+                firstTimeLightOn = false;
+            }
             int motionStatus = digitalRead(CONFIG_MOTION_SENSOR_PIN);
             if(motionStatus != lastMotionSensorValue) {
                 lastMotionSensorValue = motionStatus;
@@ -106,6 +111,7 @@
                 client.publish(CONFIG_MQTT_TOPIC_MOTION, String(digitalRead(CONFIG_MOTION_SENSOR_PIN)).c_str());
             }
         } else {
+            firstTimeLightOn = true;
             readAndSleep();
         }
         delay(CONFIG_SENSOR_DELAY);
